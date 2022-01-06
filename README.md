@@ -65,6 +65,26 @@ the path has processed since last time.
 
 2. There will be some latency between the simulator running and the path planner returning a path, with optimized code usually its not very long maybe just 1-3 time steps. During this delay the simulator will continue using points that it was last given, because of this its a good idea to store the last points you have used so you can have a smooth transition. previous_path_x, and previous_path_y can be helpful for this transition since they show the last points given to the simulator controller with the processed points already removed. You would either return a path that extends this previous path or make sure to create a new path that has a smooth transition with this last path.
 
+## Pipeline
+
+The path planner in main.cpp executes the following algorithm to output the maneuver.
+
+Look for cars ahead of us by "look_ahead_distance" meters.
+
+If there are no cars ahead, proceed with a straight path along the lane by gradually increasing the speed upto the maximum limit. 
+1) To create a straight path along the lane, create a spline with the car's position, its previous position, positions "look_ahead_distance", "look_ahead_distance" + 30 and "look_ahead_distance" + 60 meters ahead in the same lane. 
+2) Draw points from the spline spaced with the desired speed at each interval. 
+3) Produce a maximum of 5 such points to the simulator.
+
+If there are cars ahead of us, slow down the car until the car's speed matches the obstacle's speed. 
+
+1) Look for cars within "look_ahead_distance" meters ahead in the neighboring lanes. 
+2) If there are no cars in the neighboring lanes, create a spline with the car's position, its previous position and distances "look_ahead_distance", "look_ahead_distance" + 30 and "look_ahead_distance" + 60 meters in constant lane width between the current lane and the intended final lane. This increasing lane width is to have a smooth lane transition. 
+3) If there are cars in the neighboring lanes, slow down until we reach the obstacles' speed (leading car's speed) and wait for neighboring lanes to clear. 
+4) Once lane change maneuver spline is computed, take 5 points along the curve spaced so as to have the desired speed. Produce these points to the simulator.
+
+PS: If you would like to see some aggressive maneuvers, try to reduce "look_ahead_distance" to 10 meters ;). 
+
 ## Tips
 
 A really helpful resource for doing this project and creating smooth trajectories was using http://kluge.in-chemnitz.de/opensource/spline/, the spline function is in a single hearder file is really easy to use.
